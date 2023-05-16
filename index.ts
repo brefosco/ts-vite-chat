@@ -34,9 +34,9 @@ io.on('connection', (socket) => {
         io.emit('users', users); // Broadcast the updated user list
     });
 
-    socket.on('chat message', (msg: string) => {
+    socket.on('chat-message', (msg: string) => {
         console.log('message: ' + msg);
-        io.emit('chat message', msg);
+        io.emit('chat-message', msg);
     });
 });
 
