@@ -1,101 +1,111 @@
 import React, { useState, useEffect } from "react";
-import { io, Socket } from "socket.io-client";
+import socket from "./socket";
+import MessagesList, { Message } from "./components/MessagesList";
+import UsersList from "./components/UsersList";
+import MessageForm from "./components/MessageForm";
+import PrivateMessageForm from "./components/PrivateMessageForm";
+import PrivateMessagesList from "./components/PrivateMessagesList";
+import UsernameForm from "./components/UsernameForm";
 
-const socket: Socket = io("http://localhost:3000");
-
-interface Message {
-  author: string;
-  text: string;
-  timestamp: number;
-}
-
-function MessagesList({ messages }: { messages: Message[] }) {
-  return (
-    <ul style={{ listStyle: "none" }}>
-      {messages.map((msg, index) => (
-        <li key={index}>
-          <strong>{msg.author}</strong>: {msg.text}{" "}
-          {/* <em>{new Date(msg.timestamp).toLocaleString()}</em> */}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function UsernameForm({
-  username,
-  handleUsernameChange,
-  handleUsernameSubmit,
-}: any) {
-  return (
-    <form onSubmit={handleUsernameSubmit}>
-      <input
-        type="text"
-        placeholder="Enter your username"
-        value={username}
-        onChange={handleUsernameChange}
-      />
-      <button type="submit">Set Username</button>
-    </form>
-  );
-}
-
-function MessageForm({
-  message,
-  handleMessageSubmit,
-  handleMessageChange,
-}: any) {
-  return (
-    <form onSubmit={handleMessageSubmit}>
-      <input
-        type="text"
-        placeholder="Type your message"
-        value={message}
-        onChange={handleMessageChange}
-      />
-      <button type="submit">Send</button>
-    </form>
-  );
-}
-
-function UsersList({ users }: { users: Record<string, string> }) {
-  return (
-    <div>
-      <h3>Connected users: </h3>
-
-      <ul style={{ listStyle: "none" }}>
-        {Object.values(users)?.map((user, index) => (
-          <li key={index}>{user}</li>
-        ))}
-      </ul>
-    </div>
-  );
+export interface User {
+  userID: string;
+  username: string;
+  id: string;
+  sessionID: string;
+  connected: boolean;
 }
 
 function App() {
   const [username, setUsername] = useState("");
-  const [users, setUsers] = useState<Record<string, string>>({});
+  const [users, setUsers] = useState<User[]>([]);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-
+  const [privateMessage, setPrivateMessage] = useState("");
+  const [recipient, setRecipient] = useState("");
   const [isUsernameSelected, setIsUsernameSelected] = useState<boolean>(false);
+  const [privateMessages, setPrivateMessages] = useState<Message[]>([]);
+
+  console.log("users");
+  console.log(users);
+
+  useEffect(() => {
+    const sessionID = localStorage.getItem("sessionID");
+    if (sessionID) {
+      socket.auth = { sessionID };
+      console.log("will perform socket.connect()");
+      socket.connect();
+    }
+
+    socket.emit("users", (users: User[]) => {
+      console.log('users from emit');
+      console.log(users);
+      setUsers(users);
+    });
+
+    socket.on("users", (users: User[]) => {
+      setUsers(users);
+    });
+    socket.on("private message", handleNewPrivateMessage);
+    socket.on("chat message", handleNewMessage);
+
+    socket.on("connect_error", (err) => {
+      console.log(`connect_error due to ${err.message}`);
+    });
+
+    socket.on("session", ({ sessionID, userID, username }) => {
+      // Username should come from session if was already set
+      username && setUsername(username);
+      setIsUsernameSelected(true);
+      // attach the session ID to the next reconnection attempts
+      socket.auth = { sessionID };
+      // store it in the localStorage
+      localStorage.setItem("sessionID", sessionID);
+      // save the ID of the user
+      socket.userID = userID;
+    });
+
+    return () => {
+      console.log("unmounting component and disconnecting shit");
+      socket.disconnect();
+      // if (socket.connected) socket.disconnect();
+      socket.off("chat message", handleNewMessage);
+      socket.off("private message", handleNewPrivateMessage);
+    };
+  }, []);
+
+  const handleNewPrivateMessage = (msg: Message) => {
+    setPrivateMessages((privateMessages) => [...privateMessages, msg]);
+  };
+
+  const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRecipient(e.target.value);
+  };
+
+  const handlePrivateMessageChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setPrivateMessage(e.target.value);
+  };
+
+  const handlePrivateMessageSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    socket.emit(
+      "private message",
+      { recipient, text: privateMessage },
+      (error: any, acknowledgement: any) => {
+        if (error) {
+          console.error(error);
+        } else {
+          console.log(acknowledgement); // Log the acknowledgement message
+          setPrivateMessage("");
+        }
+      }
+    );
+  };
 
   const handleNewMessage = (msg: Message) => {
     setMessages((messages) => [...messages, msg]);
   };
-
-  useEffect(() => {
-    socket.on("users", (users: Record<string, string>) => {
-      setUsers(users);
-    });
-
-    socket.on("chat message", handleNewMessage);
-
-    return () => {
-      if (socket.connected) socket.disconnect();
-      socket.off("chat message", handleNewMessage);
-    };
-  }, []);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
@@ -104,6 +114,7 @@ function App() {
   const handleUsernameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsUsernameSelected(true);
+    socket.connect();
     socket.emit("set_username", username);
   };
 
@@ -127,8 +138,21 @@ function App() {
             handleMessageChange={handleMessageChange}
             handleMessageSubmit={handleMessageSubmit}
           />
-          <MessagesList messages={messages} />
-          <UsersList users={users} />
+          <div style={{ display: "flex", height: "300px" }}>
+            <MessagesList messages={messages} />
+            <UsersList users={users} />
+          </div>
+          <hr />
+          <div>
+            <PrivateMessageForm
+              recipient={recipient}
+              message={privateMessage}
+              handleRecipientChange={handleRecipientChange}
+              handleMessageChange={handlePrivateMessageChange}
+              handleMessageSubmit={handlePrivateMessageSubmit}
+            />
+            <PrivateMessagesList messages={privateMessages} />
+          </div>
         </div>
       ) : (
         <div>
@@ -145,3 +169,6 @@ function App() {
 }
 
 export default App;
+
+// TODO: Separate logic
+// Solve issue with private messages not being shown on the author
