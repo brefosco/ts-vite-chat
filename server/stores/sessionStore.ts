@@ -1,10 +1,4 @@
-interface Session {
-  id: string;
-  username: string;
-  sessionID: string;
-  userID: string;
-  connected: boolean;
-}
+import { Session } from "../types";
 
 export class SessionStore {
   sessions: Map<string, Session>;

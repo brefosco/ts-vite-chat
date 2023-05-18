@@ -1,32 +1,34 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Box, Button, Container, chakra, Text } from "@chakra-ui/react";
 import socket from "./socket";
-import MessagesList, { Message } from "./components/MessagesList";
-import UsersList from "./components/UsersList";
-import MessageForm from "./components/MessageForm";
-import PrivateMessageForm from "./components/PrivateMessageForm";
-import PrivateMessagesList from "./components/PrivateMessagesList";
+import Messages, { Message } from "./components/Messages";
+import { useAtom, useSetAtom } from "jotai";
+import {
+  messagesAtom,
+  privateMessagesAtom,
+  usersAtom,
+  usernameAtom,
+  isUsernameSelectedAtom,
+} from "./atoms";
+// import PrivateMessageForm from "./components/PrivateMessageForm";
+// import PrivateMessages from "./components/PrivateMessages";
 import UsernameForm from "./components/UsernameForm";
-
-export interface User {
-  userID: string;
-  username: string;
-  id: string;
-  sessionID: string;
-  connected: boolean;
-}
+import { PrivateMessage, User } from "./types";
+import UsersList from "./components/UsersList";
+import PrivateMessages from "./components/PrivateMessages";
 
 function App() {
-  const [username, setUsername] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [privateMessage, setPrivateMessage] = useState("");
-  const [recipient, setRecipient] = useState("");
-  const [isUsernameSelected, setIsUsernameSelected] = useState<boolean>(false);
-  const [privateMessages, setPrivateMessages] = useState<Message[]>([]);
-
-  console.log("users");
-  console.log(users);
+  const [username, setUsername] = useAtom(usernameAtom);
+  const setUsers = useSetAtom(usersAtom);
+  const [messages, setMessages] = useAtom(messagesAtom);
+  // const [privateMessage, setPrivateMessage] = useAtom(privateMessageAtom);
+  const [isUsernameSelected, setIsUsernameSelected] = useAtom(
+    isUsernameSelectedAtom
+  );
+  const setPrivateMessages = useSetAtom(privateMessagesAtom);
+  const [chatType, setChatType] = useState<"not-set" | "private" | "general">(
+    "not-set"
+  );
 
   useEffect(() => {
     const sessionID = localStorage.getItem("sessionID");
@@ -37,7 +39,7 @@ function App() {
     }
 
     socket.emit("users", (users: User[]) => {
-      console.log('users from emit');
+      console.log("users from emit");
       console.log(users);
       setUsers(users);
     });
@@ -46,7 +48,10 @@ function App() {
       setUsers(users);
     });
     socket.on("private message", handleNewPrivateMessage);
+
     socket.on("chat message", handleNewMessage);
+
+    socket.on("chat messages", handleChatMessages);
 
     socket.on("connect_error", (err) => {
       console.log(`connect_error due to ${err.message}`);
@@ -59,6 +64,7 @@ function App() {
       // attach the session ID to the next reconnection attempts
       socket.auth = { sessionID };
       // store it in the localStorage
+      console.log("setting the localStorage item yet again...");
       localStorage.setItem("sessionID", sessionID);
       // save the ID of the user
       socket.userID = userID;
@@ -70,105 +76,74 @@ function App() {
       // if (socket.connected) socket.disconnect();
       socket.off("chat message", handleNewMessage);
       socket.off("private message", handleNewPrivateMessage);
+      socket.off("users");
+      socket.off("connect_error");
+      socket.off("session");
     };
   }, []);
 
-  const handleNewPrivateMessage = (msg: Message) => {
+  const handleChatMessages = (msgs: Message[]) => {
+    setMessages(msgs);
+  };
+
+  const handleNewPrivateMessage = (msg: PrivateMessage) => {
     setPrivateMessages((privateMessages) => [...privateMessages, msg]);
   };
 
-  const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRecipient(e.target.value);
-  };
-
-  const handlePrivateMessageChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPrivateMessage(e.target.value);
-  };
-
-  const handlePrivateMessageSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    socket.emit(
-      "private message",
-      { recipient, text: privateMessage },
-      (error: any, acknowledgement: any) => {
-        if (error) {
-          console.error(error);
-        } else {
-          console.log(acknowledgement); // Log the acknowledgement message
-          setPrivateMessage("");
-        }
-      }
-    );
-  };
-
   const handleNewMessage = (msg: Message) => {
+    console.log("new msg to add");
+    console.log(msg);
     setMessages((messages) => [...messages, msg]);
   };
 
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value);
-  };
-
-  const handleUsernameSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsUsernameSelected(true);
-    socket.connect();
-    socket.emit("set_username", username);
-  };
-
-  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value);
-  };
-
-  const handleMessageSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    socket.emit("chat message", message);
-    setMessage("");
-  };
+  function SelectChatType() {
+    return (
+      <Box>
+        <Text>Select type of chat</Text>
+        <Button
+          onClick={() => {
+            setChatType("general");
+          }}
+        >
+          General
+        </Button>
+        <Button
+          onClick={() => {
+            setChatType("private");
+          }}
+        >
+          Private
+        </Button>
+      </Box>
+    );
+  }
 
   return (
-    <div>
+    // TODO: use ts-pattern match or some match to simplify this
+    <Container bgColor="gray.300" h="100vh">
+      <Text>Hello {username}!</Text>
+
       {isUsernameSelected ? (
-        <div>
-          Hello {username}
-          <MessageForm
-            message={message}
-            handleMessageChange={handleMessageChange}
-            handleMessageSubmit={handleMessageSubmit}
-          />
-          <div style={{ display: "flex", height: "300px" }}>
-            <MessagesList messages={messages} />
-            <UsersList users={users} />
-          </div>
-          <hr />
-          <div>
-            <PrivateMessageForm
-              recipient={recipient}
-              message={privateMessage}
-              handleRecipientChange={handleRecipientChange}
-              handleMessageChange={handlePrivateMessageChange}
-              handleMessageSubmit={handlePrivateMessageSubmit}
-            />
-            <PrivateMessagesList messages={privateMessages} />
-          </div>
-        </div>
+        <chakra.div>
+          {chatType === "not-set" ? (
+            <SelectChatType />
+          ) : (
+            <Box>
+              {chatType === "general" ? (
+                <Messages  />
+              ) : (
+                <PrivateMessages />
+              )}
+            </Box>
+          )}
+        </chakra.div>
       ) : (
-        <div>
-          <p>Please select a username</p>
-          <UsernameForm
-            username={username}
-            handleUsernameChange={handleUsernameChange}
-            handleUsernameSubmit={handleUsernameSubmit}
-          />
-        </div>
+        <UsernameForm />
       )}
-    </div>
+    </Container>
   );
 }
 
 export default App;
 
 // TODO: Separate logic
-// Solve issue with private messages not being shown on the author

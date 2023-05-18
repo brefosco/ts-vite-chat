@@ -2,29 +2,28 @@ import express from "express";
 import { createServer } from "http";
 import { Server, Socket as BaseSocket } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
-import { SessionStore } from "./sessionStore";
+import { SessionStore } from "./stores/sessionStore";
 
 import cors from "cors";
+import { MessageStore } from "./stores/messageStore";
+import { ChatMessageStore } from "./stores/chatMessageStore";
+import { ChatMessage, ExtendedSocket } from "./types";
 
 const app = express();
 app.use(cors()); // use cors middleware
 
 const httpServer = createServer(app);
 const sessionStore = new SessionStore();
+const messageStore = new MessageStore();
+const chatMessageStore = new ChatMessageStore();
 
 const io = new Server(httpServer, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    // allowedHeaders: ["my-custom-header"],
     credentials: true,
   },
 });
-interface ExtendedSocket extends BaseSocket {
-  sessionID?: string;
-  userID?: string;
-  username?: string;
-}
 
 function randomId() {
   return uuidv4();
@@ -63,6 +62,9 @@ io.use((socket: ExtendedSocket, next) => {
 io.on("connection", (socket: ExtendedSocket) => {
   console.log("a user connected");
 
+  const chatMessages = chatMessageStore.findAllMessages();
+  socket.emit("chat messages", chatMessages);
+
   socket.emit("session", {
     sessionID: socket.sessionID,
     userID: socket.userID,
@@ -92,6 +94,7 @@ io.on("connection", (socket: ExtendedSocket) => {
 
     io.emit("users", users);
 
+    console.log("emit users");
     console.log(users);
   });
 
@@ -99,6 +102,8 @@ io.on("connection", (socket: ExtendedSocket) => {
     const users = [...sessionStore.findAllSessions()].filter(
       (session) => session.connected
     );
+    console.log("users");
+    console.log(users);
     callback(users);
   });
 
@@ -106,7 +111,7 @@ io.on("connection", (socket: ExtendedSocket) => {
     if (socket.sessionID) {
       sessionStore.saveSession(socket.sessionID, {
         userID: socket.userID ?? "",
-        username: socket.username ?? "if you can see this, username is undefined. fuck",
+        username: socket.username ?? " undefined. fuck",
         id: socket.id,
         sessionID: socket.sessionID,
         connected: false,
@@ -115,33 +120,20 @@ io.on("connection", (socket: ExtendedSocket) => {
   });
 
   socket.on("chat message", (msg: string) => {
-    // Emit the list of connected users
-    const users = [...sessionStore.findAllSessions()]
-      .filter((session) => session.connected)
-      .map((session) => session.username);
+    const message: ChatMessage = {
+      content: msg,
+      from: socket.userID ?? "this shit is broken",
+      username: socket.username ?? "Unknown user kjkkj",
+    };
 
-    // const username = users[socket.id];
-    console.log(
-      "DEBUGGING WHY ON EARTH THE USERNAME ON A RELOADED USER message does not appear"
-    );
-    console.log("socket.id");
-    console.log(socket.id);
-    console.log(socket.username);
+    console.log("message");
+    console.log(message);
 
-    console.log("users");
-    console.log(users);
-    console.log("username");
-    // console.log(username);
-    io.emit("chat message", {
-      author: socket.username,
-      text: msg,
-      timestamp: Date.now(),
-    });
+    io.emit("chat message", message); // changed from socket.emit to io.emit
+    chatMessageStore.saveMessage(message);
   });
 
   socket.on("private message", ({ recipient, text }, callback) => {
-    console.log("there is a private message somewhere");
-
     const senderSession = sessionStore.findSession(socket.sessionID ?? "");
     const recipientSession = sessionStore.findSessionByUsername(recipient);
 
@@ -150,11 +142,19 @@ io.on("connection", (socket: ExtendedSocket) => {
       const recipientSocketId = recipientSession.id; // Get socket id from the recipient's session
 
       if (recipientSocketId) {
-        io.to(recipientSocketId).emit("private message", {
-          author: sender,
-          text,
-          timestamp: Date.now(),
-        });
+        const message = {
+          from: sender,
+          content: text,
+          to: recipientSocketId,
+        };
+
+        io.to(recipientSocketId).emit("private message", message);
+        // Also emit the message back to the sender's socket
+        socket.emit("private message", message);
+
+        // Save the message
+        messageStore.saveMessage(message);
+
         callback(null, "Message sent"); // Call the callback function to send an acknowledgement back to the client
       } else {
         callback("Recipient not found"); // Call the callback function with an error message
