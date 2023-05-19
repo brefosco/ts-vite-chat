@@ -1,11 +1,14 @@
-import { Input, chakra, Button, Text } from "@chakra-ui/react";
+import { Input, chakra, Button } from "@chakra-ui/react";
 import { useAtom, useSetAtom } from "jotai";
 import { usernameAtom, isUsernameSelectedAtom } from "../atoms";
 import socket from "../socket";
+import { useNavigate } from "react-router-dom";
 
 function UsernameForm() {
   const [username, setUsername] = useAtom(usernameAtom);
   const setIsUsernameSelected = useSetAtom(isUsernameSelectedAtom);
+
+  const navigate = useNavigate();
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
@@ -16,6 +19,9 @@ function UsernameForm() {
     setIsUsernameSelected(true);
     socket.connect();
     socket.emit("set_username", username);
+    
+    // TODO: this will eventually get 
+    navigate("/general");
   };
 
   return (
@@ -29,7 +35,7 @@ function UsernameForm() {
         value={username}
         onChange={handleUsernameChange}
       />
-      <Button w='100%'mt={2} colorScheme="facebook" type="submit">
+      <Button w="100%" mt={2} colorScheme="facebook" type="submit">
         Enter
       </Button>
     </chakra.form>

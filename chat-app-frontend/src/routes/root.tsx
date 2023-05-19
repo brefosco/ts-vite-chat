@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Container, chakra, Text } from "@chakra-ui/react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { Container, Text } from "@chakra-ui/react";
 import { useAtom, useSetAtom } from "jotai";
 import {
   messagesAtom,
@@ -7,14 +8,18 @@ import {
   usersAtom,
   usernameAtom,
   isUsernameSelectedAtom,
-} from "./atoms";
-import socket from "./socket";
-import Messages, { Message } from "./components/Messages";
-import UsernameForm from "./components/UsernameForm";
-import PrivateMessages from "./components/PrivateMessages";
-import { PrivateMessage, User } from "./types";
+} from "../atoms";
+import socket from "../socket";
+import { Message } from "../components/Messages";
+import { PrivateMessage, User } from "../types";
 
-function App() {
+interface SessionData {
+  sessionID: string;
+  userID: string;
+  username: string;
+}
+
+function Root() {
   const [username, setUsername] = useAtom(usernameAtom);
   const setUsers = useSetAtom(usersAtom);
   const setMessages = useSetAtom(messagesAtom);
@@ -22,9 +27,7 @@ function App() {
     isUsernameSelectedAtom
   );
   const setPrivateMessages = useSetAtom(privateMessagesAtom);
-  const [chatType, setChatType] = useState<"not-set" | "private" | "general">(
-    "not-set"
-  );
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadSession();
@@ -33,12 +36,22 @@ function App() {
     return cleanUpSocketEvents;
   }, []);
 
+  useEffect(() => {
+    // only run redirection when loading is done
+    if (username && isUsernameSelected) {
+      navigate("/general");
+    } else {
+      navigate("/select-username");
+    }
+  }, [navigate, isUsernameSelected]); // include isLoading here
+
   const loadSession = () => {
     const sessionID = localStorage.getItem("sessionID");
     if (sessionID) {
       socket.auth = { sessionID };
       socket.connect();
     }
+    // setIsLoading(false); // set loading to false once session is loaded
   };
 
   const getUsers = () => {
@@ -61,15 +74,12 @@ function App() {
   const handleConnectError = (err: Error) => {
     console.log(`connect_error due to ${err.message}`);
   };
-  interface SessionData {
-    sessionID: string;
-    userID: string;
-    username: string;
-  }
 
   const handleSession = ({ sessionID, userID, username }: SessionData) => {
-    username && setUsername(username);
+    console.log("handling session");
+    console.log(username);
     setIsUsernameSelected(true);
+    username && setUsername(username);
     socket.auth = { sessionID };
     localStorage.setItem("sessionID", sessionID);
     socket.userID = userID;
@@ -96,59 +106,18 @@ function App() {
   };
 
   const handleNewMessage = (msg: Message) => {
-    console.log("new msg to add");
-    console.log(msg);
     setMessages((messages) => [...messages, msg]);
   };
 
-  function SelectChatType() {
-    return (
-      <Box>
-        <Text>Select type of chat</Text>
-        <Button
-          onClick={() => {
-            setChatType("general");
-          }}
-        >
-          General
-        </Button>
-        <Button
-          onClick={() => {
-            setChatType("private");
-          }}
-        >
-          Private
-        </Button>
-      </Box>
-    );
-  }
-
   return (
-    // TODO: use ts-pattern match or some match to simplify this
-    <Container bgColor="gray.300">
+    <Container maxW="2xl" bgColor="gray.300">
       <Text>
         Hello <strong>{username}</strong>!
       </Text>
       <hr />
-      {isUsernameSelected ? (
-        <chakra.div>
-          {chatType === "not-set" ? (
-            <SelectChatType />
-          ) : (
-            <Box>
-              {chatType === "general" ? <Messages /> : <PrivateMessages />}
-            </Box>
-          )}
-        </chakra.div>
-      ) : (
-        <UsernameForm />
-      )}
+      <Outlet />
     </Container>
   );
 }
 
-export default App;
-
-// TODO: Separate logic
-// REFACTOR INTO PAGES or CONTAINERS
-// Add react router into it
+export default Root;

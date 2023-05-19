@@ -11,15 +11,23 @@ function UsersList() {
   };
 
   return (
-    <div style={{ marginLeft: "100px" }}>
-      <h3>Connected users: </h3>
-      <ul style={{ listStyle: "none" }}>
+    <div>
+      <h3>Connected users:</h3>
+      <chakra.ul listStyleType="none">
         {users?.map((user, index) => (
-          <chakra.li cursor='pointer' key={index} onClick={() => selectUser(user.username)}>
+          <chakra.li
+            cursor="pointer"
+            key={index}
+            bgColor="gray.400"
+            onClick={() => selectUser(user.username)}
+            borderRadius={4}
+            p={2}
+            m={1}
+          >
             {user.username}
           </chakra.li>
         ))}
-      </ul>
+      </chakra.ul>
     </div>
   );
 }

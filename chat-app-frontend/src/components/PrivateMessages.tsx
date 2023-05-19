@@ -8,14 +8,9 @@ import {
 import socket from "../socket";
 import UsersList from "./UsersList";
 
-function PrivateMessagesList() {
+function PrivateMessageForm() {
   const [privateMessage, setPrivateMessage] = useAtom(privateMessageAtom);
-  const [recipient, setRecipient] = useAtom(recipientAtom);
-  const privateMessages = useAtomValue(privateMessagesAtom);
-
-  const handleRecipientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRecipient(e.target.value);
-  };
+  const recipient = useAtomValue(recipientAtom);
 
   const handlePrivateMessageChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -38,37 +33,64 @@ function PrivateMessagesList() {
       }
     );
   };
+  return (
+    <Box>
+      <chakra.form
+        position="sticky"
+        bottom={0}
+        left={0}
+        right={0}
+        p={3}
+        onSubmit={handlePrivateMessageSubmit}
+        display="flex"
+      >
+        <Input
+          type="text"
+          bgColor="white"
+          placeholder="Type your private message"
+          value={privateMessage}
+          onChange={handlePrivateMessageChange}
+        />
+        <Button colorScheme="telegram" type="submit">
+          Send
+        </Button>
+      </chakra.form>
+    </Box>
+  );
+}
+
+function PrivateMessagesList() {
+  const recipient = useAtomValue(recipientAtom);
+  const privateMessages = useAtomValue(privateMessagesAtom);
 
   return (
-    <div>
-      <UsersList />
-      <hr />
-      <Text>To: {recipient}</Text>
-      <chakra.ul listStyleType="none">
-        {privateMessages.map((msg, index) => (
-          <li key={index}>
-            <strong>{msg.from}</strong>: {msg.content}
-          </li>
-        ))}
-      </chakra.ul>
-      <Box>
-        <form onSubmit={handlePrivateMessageSubmit}>
-          <Input
-            type="text"
-            placeholder="Type your private message"
-            value={privateMessage}
-            onChange={handlePrivateMessageChange}
-          />
-          <Button colorScheme="telegram" type="submit">
-            Send
-          </Button>
-        </form>
+    <Box display="flex" minHeight="100vh">
+      {/* set the display to flex and direction to column, and make sure it has full height */}
+      <Box flex="1" overflow="auto">
+        {/* this box will take all available space and have scrollbar if content is longer than available space */}
+        {recipient.length > 0 ? (
+          <Box>
+            <Text fontWeight={800} fontSize="xl" textAlign="center">
+              {recipient}
+            </Text>
+            <chakra.ul listStyleType="none">
+              {privateMessages.map((msg, index) => (
+                <li key={index}>{msg.content}</li>
+              ))}
+            </chakra.ul>
+            <Box>
+              {/* this box will be sticky on the bottom */}
+              <PrivateMessageForm />
+            </Box>
+          </Box>
+        ) : (
+          <UsersList />
+        )}
       </Box>
-    </div>
+    </Box>
   );
 }
 
 export default PrivateMessagesList;
 
-// TODO: Add functionality to first click on the user to message, then open the chat.
 // Change the layout so it's similar to the other chat, but with the name of the receiver on top

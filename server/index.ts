@@ -1,6 +1,6 @@
 import express from "express";
 import { createServer } from "http";
-import { Server, Socket as BaseSocket } from "socket.io";
+import { Server } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
 import { SessionStore } from "./stores/sessionStore";
 
@@ -61,15 +61,22 @@ io.use((socket: ExtendedSocket, next) => {
 
 io.on("connection", (socket: ExtendedSocket) => {
   console.log("a user connected");
+  const roomName = "permanent";
+
+  // Automatically join the "permanent" room on connection
+  socket.join(roomName);
+  console.log(`User ${socket.userID} has joined room ${roomName}`);
+
+  // Broadcast to other clients in the room that a new user has joined
+  socket.to(roomName).emit("user-joined-room", socket.userID);
 
   const chatMessages = chatMessageStore.findAllMessages();
   socket.emit("chat messages", chatMessages);
 
-  socket.emit("session", {
-    sessionID: socket.sessionID,
-    userID: socket.userID,
-    username: socket.username,
-  });
+  const privateMessages = messageStore.findMessagesForUser(socket.userID!);
+
+  console.log(privateMessages);
+  socket.emit("private messages", privateMessages);
 
   // When a user sets their username
   socket.on("set_username", (username: string) => {
@@ -93,17 +100,12 @@ io.on("connection", (socket: ExtendedSocket) => {
     );
 
     io.emit("users", users);
-
-    console.log("emit users");
-    console.log(users);
   });
 
   socket.on("users", (callback) => {
     const users = [...sessionStore.findAllSessions()].filter(
       (session) => session.connected
     );
-    console.log("users");
-    console.log(users);
     callback(users);
   });
 
@@ -126,11 +128,20 @@ io.on("connection", (socket: ExtendedSocket) => {
       username: socket.username ?? "Unknown user kjkkj",
     };
 
-    console.log("message");
-    console.log(message);
+    // socket.emit("session", {
+    //   sessionID: socket.sessionID,
+    //   userID: socket.userID,
+    //   username: socket.username,
+    // });
 
-    io.emit("chat message", message); // changed from socket.emit to io.emit
+    io.to(roomName).emit("chat message", message); // changed from io.emit to io.to(roomName).emit
     chatMessageStore.saveMessage(message);
+  });
+
+  socket.emit("session", {
+    sessionID: socket.sessionID,
+    userID: socket.userID,
+    username: socket.username,
   });
 
   socket.on("private message", ({ recipient, text }, callback) => {

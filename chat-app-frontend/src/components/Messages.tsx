@@ -26,8 +26,8 @@ function Messages() {
   };
 
   return (
-    <Box width="100%">
-      <Box>
+    <Box display="flex" flexDirection="column" h="95vh">
+      <Box flex="1" overflow="auto">
         {messages.map((msg, index) => (
           <Flex
             key={index}
@@ -35,11 +35,9 @@ function Messages() {
               msg.username === username ? "flex-end" : "flex-start"
             }
           >
-            <Box>
-              <Text display="inline" fontWeight={500}>
-                {msg.username}:
-              </Text>{" "}
-              {msg.content}
+            <Box bgColor="blue.300" borderRadius="md" p={2} my={1}>
+              <Text fontWeight={300}>{msg.username}</Text>
+              <Text fontWeight={400}>{msg.content}</Text>
             </Box>
           </Flex>
         ))}
@@ -49,10 +47,6 @@ function Messages() {
           textAlign="center"
           onSubmit={handleMessageSubmit}
           display="flex"
-          position="fixed"
-          bottom={0}
-          left={0}
-          right={0}
           p={3}
         >
           <Input
