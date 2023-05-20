@@ -13,7 +13,7 @@ function UsersList() {
   return (
     <div>
       <h3>Connected users:</h3>
-      <chakra.ul listStyleType="none">
+      <chakra.ul listStyleType="none" display='flex'>
         {users?.map((user, index) => (
           <chakra.li
             cursor="pointer"

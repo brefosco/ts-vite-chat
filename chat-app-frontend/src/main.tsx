@@ -4,7 +4,7 @@ import App from "./routes/root.tsx";
 import { ChakraProvider } from "@chakra-ui/react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ErrorPage from "./error-page.tsx";
-import Messages from "./components/Messages.tsx";
+import Messages from "./containers/Messages.tsx";
 import PrivateMessages from "./components/PrivateMessages.tsx";
 import UsernameSelect from "./containers/UsernameSelect.tsx";
 

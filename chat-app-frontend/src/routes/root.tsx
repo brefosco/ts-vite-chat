@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { Container, Text } from "@chakra-ui/react";
+import { Container } from "@chakra-ui/react";
 import { useAtom, useSetAtom } from "jotai";
 import {
   messagesAtom,
@@ -10,8 +10,7 @@ import {
   isUsernameSelectedAtom,
 } from "../atoms";
 import socket from "../socket";
-import { Message } from "../components/Messages";
-import { PrivateMessage, User } from "../types";
+import { ChatMessage, PrivateMessage, User } from "../types";
 
 interface SessionData {
   sessionID: string;
@@ -29,29 +28,12 @@ function Root() {
   const setPrivateMessages = useSetAtom(privateMessagesAtom);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadSession();
-    getUsers();
-    registerSocketEvents();
-    return cleanUpSocketEvents;
-  }, []);
-
-  useEffect(() => {
-    // only run redirection when loading is done
-    if (username && isUsernameSelected) {
-      navigate("/general");
-    } else {
-      navigate("/select-username");
-    }
-  }, [navigate, isUsernameSelected]); // include isLoading here
-
   const loadSession = () => {
     const sessionID = localStorage.getItem("sessionID");
     if (sessionID) {
       socket.auth = { sessionID };
       socket.connect();
     }
-    // setIsLoading(false); // set loading to false once session is loaded
   };
 
   const getUsers = () => {
@@ -85,16 +67,7 @@ function Root() {
     socket.userID = userID;
   };
 
-  const cleanUpSocketEvents = () => {
-    socket.disconnect();
-    socket.off("chat message", handleNewMessage);
-    socket.off("private message", handleNewPrivateMessage);
-    socket.off("users");
-    socket.off("connect_error");
-    socket.off("session");
-  };
-
-  const handleChatMessages = (msgs: Message[]) => {
+  const handleChatMessages = (msgs: ChatMessage[]) => {
     setMessages(msgs);
   };
 
@@ -105,16 +78,42 @@ function Root() {
     setPrivateMessages((privateMessages) => [...privateMessages, msg]);
   };
 
-  const handleNewMessage = (msg: Message) => {
+  const handleNewMessage = (msg: ChatMessage) => {
     setMessages((messages) => [...messages, msg]);
   };
 
+  const cleanUpSocketEvents = () => {
+    socket.disconnect();
+    socket.off("chat message", handleNewMessage);
+    socket.off("private message", handleNewPrivateMessage);
+    socket.off("users");
+    socket.off("connect_error");
+    socket.off("session");
+  };
+
+  useEffect(() => {
+    loadSession();
+    getUsers();
+    registerSocketEvents();
+    return cleanUpSocketEvents;
+  }, []);
+
+  useEffect(() => {
+    // only run redirection when loading is done
+    if (username && isUsernameSelected) {
+      navigate("/general");
+    } else {
+      navigate("/select-username");
+    }
+  }, [navigate, isUsernameSelected]);
+
   return (
-    <Container maxW="2xl" bgColor="gray.300">
-      <Text>
-        Hello <strong>{username}</strong>!
-      </Text>
-      <hr />
+    <Container
+      minW="container.sm"
+      maxW="container.xl"
+      bgColor="gray.300"
+      h="100vh"
+    >
       <Outlet />
     </Container>
   );
