@@ -14,6 +14,7 @@ export interface PrivateMessage {
 }
 
 export interface ChatMessage {
+  timestamp: Date;
   content: string;
   from: string;
   username: string;

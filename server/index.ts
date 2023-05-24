@@ -1,13 +1,11 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { v4 as uuidv4 } from "uuid";
-import { SessionStore } from "./stores/sessionStore";
-
 import cors from "cors";
+import { SessionStore } from "./stores/sessionStore";
 import { MessageStore } from "./stores/messageStore";
 import { ChatMessageStore } from "./stores/chatMessageStore";
-import { ChatMessage, ExtendedSocket } from "./types";
+import { ExtendedSocket } from "./types";
 import { handleSession } from "./sessionHandling";
 import { handleMessage } from "./messageHandling";
 
@@ -72,5 +70,3 @@ io.on("connection", (socket: ExtendedSocket) => {
 httpServer.listen(3000, () => {
   console.log("listening on *:3000");
 });
-
-

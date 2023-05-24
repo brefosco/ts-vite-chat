@@ -64,7 +64,7 @@ function PrivateMessagesList() {
   const privateMessages = useAtomValue(privateMessagesAtom);
 
   return (
-    <Box display="flex" minHeight="100vh">
+    <Box display="flex">
       {/* set the display to flex and direction to column, and make sure it has full height */}
       <Box flex="1" overflow="auto">
         {/* this box will take all available space and have scrollbar if content is longer than available space */}

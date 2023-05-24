@@ -1,4 +1,4 @@
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, chakra } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import { messagesAtom, usernameAtom } from "../atoms";
 import { useAtomValue } from "jotai";
@@ -25,7 +25,12 @@ function MessagesList() {
         >
           <Box bgColor="blue.300" borderRadius="md" p={2} my={1}>
             <Text fontWeight={300}>{msg.username}</Text>
-            <Text fontWeight={400}>{msg.content}</Text>
+            <Text fontWeight={400}>
+              {msg.content} -{" "}
+              <chakra.span fontSize='xs' fontWeight={200}>
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </chakra.span>
+            </Text>
           </Box>
         </Flex>
       ))}

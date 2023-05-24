@@ -10,18 +10,21 @@ export function handleMessage(
   messageStore: MessageStore,
   chatMessageStore: ChatMessageStore
 ) {
-  // Your message related functionality goes here...
   io.on("connection", (socket: ExtendedSocket) => {
     const roomName = "permanent";
 
     socket.on("chat message", (msg: string) => {
+      const timestamp = new Date();
+
       const message: ChatMessage = {
+        timestamp: timestamp,
         content: msg,
-        from: socket.userID ?? "this shit is broken",
-        username: socket.username ?? "Unknown user kjkkj",
+        from: socket.userID!,
+        username: socket.username!,
       };
 
       io.to(roomName).emit("chat message", message); // changed from io.emit to io.to(roomName).emit
+      socket.emit("activity"); // emit activity to avoid disconnectin after 15 minutes
       chatMessageStore.saveMessage(message);
     });
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Container } from "@chakra-ui/react";
 import { useAtom, useSetAtom } from "jotai";
@@ -108,15 +108,14 @@ function Root() {
   }, [navigate, isUsernameSelected]);
 
   return (
-    <Container
-      minW="container.sm"
-      maxW="container.xl"
-      bgColor="gray.300"
-      h="100vh"
-    >
+    <Container maxW="container.xl" bgColor="gray.300" h="100vh" w="100%">
       <Outlet />
     </Container>
   );
 }
 
 export default Root;
+// TODO: Maybe add lerna
+// Censor profanity
+// Refresh chat every day
+// Max messages

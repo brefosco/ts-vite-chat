@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 function randomId() {
   return uuidv4();
 }
+let connectedUsers = 0;
 
 export function handleSession(io: Server, sessionStore: SessionStore) {
   // Your session related functionality goes here...
@@ -39,6 +40,29 @@ export function handleSession(io: Server, sessionStore: SessionStore) {
 
   io.on("connection", (socket: ExtendedSocket) => {
     const roomName = "permanent";
+    const inactivityTimeout = 15 * 60 * 1000; // 15 minutes
+    if (connectedUsers >= 10) {
+      socket.disconnect(true);
+      console.log("Max users limit reached. Disconnecting new user.");
+      return;
+    }
+    connectedUsers++;
+
+    let timeout = setTimeout(() => {
+      console.log(`User ${socket.userID} was disconnected due to inactivity.`);
+      socket.disconnect(true);
+    }, inactivityTimeout);
+
+    // Reset timeout on any activity
+    socket.on("activity", () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        console.log(
+          `User ${socket.userID} was disconnected due to inactivity.`
+        );
+        socket.disconnect(true);
+      }, inactivityTimeout);
+    });
 
     socket.on("set_username", (username: string) => {
       if (!socket.sessionID) {
@@ -66,14 +90,15 @@ export function handleSession(io: Server, sessionStore: SessionStore) {
     socket.on("disconnect", () => {
       if (socket.sessionID) {
         sessionStore.saveSession(socket.sessionID, {
-          userID: socket.userID ?? "",
-          username: socket.username ?? " undefined. fuck",
+          userID: socket.userID!,
+          username: socket.username!,
           id: socket.id,
           sessionID: socket.sessionID,
           connected: false,
         });
+        clearTimeout(timeout);
+        connectedUsers--;
       }
-
       // Broadcast to other clients in the room that a new user has joined
       socket.to(roomName).emit("user-joined-room", socket.userID);
     });
