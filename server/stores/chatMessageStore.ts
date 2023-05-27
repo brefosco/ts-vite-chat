@@ -16,5 +16,3 @@ export class ChatMessageStore {
     return this.messages;
   }
 }
-
-//   TODO: EXPORT TYPES TO types file

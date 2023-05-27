@@ -2,21 +2,19 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import { SessionStore } from "./stores/sessionStore";
-import { MessageStore } from "./stores/messageStore";
-import { ChatMessageStore } from "./stores/chatMessageStore";
 import { ExtendedSocket } from "./types";
 import { handleSession } from "./sessionHandling";
 import { handleMessage } from "./messageHandling";
 
+// Import controllers
+import * as sessionController from "./controllers/sessionController";
+import * as messageController from "./controllers/messageController";
+import * as chatMessageController from "./controllers/chatMessageController";
+
 const app = express();
-app.use(cors()); // use cors middleware
+app.use(cors()); // Use CORS middleware
 
 const httpServer = createServer(app);
-const sessionStore = new SessionStore();
-const messageStore = new MessageStore();
-const chatMessageStore = new ChatMessageStore();
-
 const io = new Server(httpServer, {
   cors: {
     origin: "*",
@@ -25,13 +23,11 @@ const io = new Server(httpServer, {
   },
 });
 
-handleSession(io, sessionStore);
-
-handleMessage(io, sessionStore, messageStore, chatMessageStore);
+handleSession(io); // No need to pass the session store
+handleMessage(io); // No need to pass the message stores
 
 const roomName = "permanent";
 io.on("connection", (socket: ExtendedSocket) => {
-  // const roomUsers = {}; // object to keep track of number of users in each room
   console.log("a user connected");
 
   // Automatically join the "permanent" room on connection
@@ -41,16 +37,14 @@ io.on("connection", (socket: ExtendedSocket) => {
   // Broadcast to other clients in the room that a new user has joined
   socket.to(roomName).emit("user-joined-room", socket.userID);
 
-  const chatMessages = chatMessageStore.findAllMessages();
+  const chatMessages = chatMessageController.getAllChatMessages();
   socket.emit("chat messages", chatMessages);
 
-  const privateMessages = messageStore.findMessagesForUser(socket.userID!);
-
-  console.log(privateMessages);
+  const privateMessages = messageController.getMessagesForUser(socket.userID!);
   socket.emit("private messages", privateMessages);
 
   socket.on("users", (callback) => {
-    const users = [...sessionStore.findAllSessions()].filter(
+    const users = sessionController.getAllSessions().filter(
       (session) => session.connected
     );
     callback(users);
