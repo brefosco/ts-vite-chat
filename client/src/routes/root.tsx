@@ -108,14 +108,13 @@ function Root() {
   }, [navigate, isUsernameSelected]);
 
   return (
-    <Container maxW="container.xl" bgColor="gray.300" h="100vh" w="100%">
+    <Container maxW="container.xl" bgColor="gray.300" w="100%">
       <Outlet />
     </Container>
   );
 }
 
 export default Root;
-// TODO: Maybe add lerna
-// Censor profanity
+// TODO: Censor profanity
 // Refresh chat every day
 // Max messages
