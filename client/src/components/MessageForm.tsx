@@ -15,7 +15,6 @@ function MessageForm() {
 
   const handleMessageSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("emitting " + message);
     socket.emit("chat message", message);
     setMessage("");
   };
@@ -27,6 +26,7 @@ function MessageForm() {
   return (
     <Box>
       <chakra.form
+        role="form"
         textAlign="center"
         onSubmit={handleMessageSubmit}
         display="flex"
@@ -36,6 +36,7 @@ function MessageForm() {
           ref={inputRef}
           type="text"
           backgroundColor="white"
+          color="black"
           placeholder="Type your message"
           minLength={1}
           required
@@ -44,7 +45,7 @@ function MessageForm() {
           onChange={handleMessageChange}
           mr={1}
         />
-        <Button colorScheme="telegram" type="submit">
+        <Button colorScheme="telegram" type="submit" aria-label="Send">
           <IoMdSend />
         </Button>
       </chakra.form>

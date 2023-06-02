@@ -35,6 +35,7 @@ function UsernameForm() {
           ref={inputRef}
           minLength={4}
           bgColor="white"
+          color="black"
           required
           type="text"
           placeholder="Select your username"

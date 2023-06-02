@@ -9,7 +9,9 @@ function UsernameSelect() {
       justifyContent="center"
       height="100vh"
     >
-      <Text fontSize='2xl' fontWeight='light'>Hi! Welcome to my chat app</Text>
+      <Text fontSize="2xl" fontWeight="light">
+        Hi! Welcome to my chat app
+      </Text>
       <UsernameForm />
     </Flex>
   );

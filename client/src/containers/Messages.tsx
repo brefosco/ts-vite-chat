@@ -1,7 +1,7 @@
 import { Box, Text } from "@chakra-ui/react";
 import UsersList from "../components/UsersList";
 import MessageForm from "../components/MessageForm";
-import MessagesList from "../components/MessageList";
+import MessagesList from "../components/MessagesList";
 
 function Messages() {
   return (
