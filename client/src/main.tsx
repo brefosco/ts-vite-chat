@@ -7,6 +7,7 @@ import ErrorPage from "./error-page.tsx";
 import Messages from "./containers/Messages.tsx";
 import PrivateMessages from "./components/PrivateMessages.tsx";
 import UsernameSelect from "./containers/UsernameSelect.tsx";
+import theme from "./theme/index.ts";
 
 const router = createBrowserRouter([
   {
@@ -32,7 +33,7 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <RouterProvider router={router} />
     </ChakraProvider>
   </React.StrictMode>

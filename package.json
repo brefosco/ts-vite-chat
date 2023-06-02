@@ -1,4 +1,8 @@
 {
+  "name": "chat-app",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "client": "cd client && yarn dev",
     "server": "cd server && yarn dev",

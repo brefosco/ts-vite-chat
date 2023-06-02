@@ -12,9 +12,6 @@ export class ChatMessageStore {
   }
 
   findAllMessages() {
-    console.log(this.messages);
     return this.messages;
   }
 }
-
-//   TODO: EXPORT TYPES TO types file
