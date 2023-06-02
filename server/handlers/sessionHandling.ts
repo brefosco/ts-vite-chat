@@ -8,7 +8,13 @@ function randomId() {
   return uuidv4();
 }
 
-let connectedUsers = 0;
+function checkUsernameUnique(username: string) {
+  const sessions = sessionController.getAllSessions();
+
+  return !sessions.some(
+    (session) => session.username === username && session.connected
+  );
+}
 
 export function handleSession(io: Server) {
   io.use((socket: ExtendedSocket, next) => {
@@ -35,33 +41,46 @@ export function handleSession(io: Server) {
   });
 
   io.on("connection", (socket: ExtendedSocket) => {
+    const connectedUsers = io.engine.clientsCount;
     const inactivityTimeout = 15 * 60 * 1000; // 15 minutes
     if (connectedUsers >= 10) {
       socket.disconnect(true);
       console.log("Max users limit reached. Disconnecting new user.");
       return;
     }
-    connectedUsers++;
+    // connectedUsers++;
     let timeout = setTimeout(() => {
-      console.log(`User ${socket.userID} was disconnected due to inactivity.`);
+      console.log(
+        `User ${socket.username} was disconnected due to inactivity.`
+      );
       socket.disconnect(true);
     }, inactivityTimeout);
 
     socket.on("activity", () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        console.log(`User ${socket.userID} was disconnected due to inactivity.`);
+        console.log(
+          `User ${socket.username} was disconnected due to inactivity.`
+        );
         socket.disconnect(true);
       }, inactivityTimeout);
     });
 
-    socket.on("set_username", (username: string) => {
+    socket.on("set_username", (username: string, callback: Function) => {
+      const isUsernameUnique = checkUsernameUnique(username);
+
+      if (!isUsernameUnique) {
+        callback("Username already taken");
+        return;
+      }
+
       if (!socket.sessionID) {
         socket.sessionID = randomId();
         socket.userID = randomId();
       }
 
       socket.username = username;
+
       sessionController.saveSession(socket.sessionID, {
         userID: socket.userID ?? "",
         username: socket.username,
@@ -70,11 +89,13 @@ export function handleSession(io: Server) {
         connected: true,
       });
 
-      const users = sessionController.getAllSessions().filter(
-        (session) => session.connected
-      );
+      const users = sessionController
+        .getAllSessions()
+        .filter((session) => session.connected);
 
       io.emit("users", users);
+
+      callback(null); // No error
     });
 
     socket.on("disconnect", () => {
@@ -87,7 +108,7 @@ export function handleSession(io: Server) {
           connected: false,
         });
         clearTimeout(timeout);
-        connectedUsers--;
+        // connectedUsers--;
       }
       socket.to(roomName).emit("user-joined-room", socket.userID);
     });
