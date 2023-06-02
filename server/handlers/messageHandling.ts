@@ -1,11 +1,11 @@
 import { Server } from "socket.io";
-import { ExtendedSocket, ChatMessage } from "./types";
-import { roomName } from "./constants";
+import { ExtendedSocket, ChatMessage } from "../types";
+import { roomName } from "../constants";
 
 // Import controllers
-import * as sessionController from "./controllers/sessionController";
-import * as messageController from "./controllers/messageController";
-import * as chatMessageController from "./controllers/chatMessageController";
+import * as sessionController from "../controllers/sessionController";
+import * as messageController from "../controllers/messageController";
+import * as chatMessageController from "../controllers/chatMessageController";
 
 export function handleMessage(io: Server) {
   io.on("connection", (socket: ExtendedSocket) => {

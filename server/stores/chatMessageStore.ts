@@ -12,7 +12,6 @@ export class ChatMessageStore {
   }
 
   findAllMessages() {
-    console.log(this.messages);
     return this.messages;
   }
 }

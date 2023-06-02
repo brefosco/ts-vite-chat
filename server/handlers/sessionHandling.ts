@@ -1,8 +1,8 @@
 import { Server } from "socket.io";
-import { ExtendedSocket } from "./types";
+import { ExtendedSocket } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import { roomName } from "./constants";
-import * as sessionController from "./controllers/sessionController";
+import { roomName } from "../constants";
+import * as sessionController from "../controllers/sessionController";
 
 function randomId() {
   return uuidv4();
