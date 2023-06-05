@@ -1,5 +1,5 @@
 # Prototype Chat Application
-This is a prototype of a real-time chat application built with TypeScript, React, Express, Socket.io, Vite.
+Prototype of a real-time chat application built with TypeScript, React, Express, Socket.io, Vite.
 
 ## Features
 * Real-time messaging: Send and receive messages in real-time.
