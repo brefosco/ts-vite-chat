@@ -4,8 +4,8 @@ import { Container } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { usernameAtom, isUsernameSelectedAtom } from "../atoms";
 import { LightMode } from "@chakra-ui/react";
-import socket from "../socket";
 import useSocketEvents from "../hooks/useSocketEvents";
+import { loadSession } from "../utils";
 
 function Root() {
   const username = useAtomValue(usernameAtom);
@@ -13,14 +13,6 @@ function Root() {
   const navigate = useNavigate();
 
   useSocketEvents();
-
-  const loadSession = () => {
-    const sessionID = localStorage.getItem("sessionID");
-    if (sessionID) {
-      socket.auth = { sessionID };
-      socket.connect();
-    }
-  };
 
   useEffect(() => {
     loadSession();
@@ -47,5 +39,9 @@ function Root() {
 
 export default Root;
 // TODO: Censor profanity
-// Refresh chat every day
+// Refresh chat every day 
 // Max messages
+// Unify casing (chat message, set_username)
+// Hide select username button until socket is connected (or connect socket when a username is selected)
+// Update when a user connects or disconnects (currently it doesnt update them)
+// Random color for users in permanent room

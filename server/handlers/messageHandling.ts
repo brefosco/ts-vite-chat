@@ -9,7 +9,7 @@ import * as chatMessageController from "../controllers/chatMessageController";
 
 export function handleMessage(io: Server) {
   io.on("connection", (socket: ExtendedSocket) => {
-    socket.on("chat message", (msg: string) => {
+    socket.on("chat_message", (msg: string) => {
       const timestamp = new Date();
 
       const message: ChatMessage = {
@@ -19,7 +19,7 @@ export function handleMessage(io: Server) {
         username: socket.username!,
       };
 
-      io.to(roomName).emit("chat message", message);
+      io.to(roomName).emit("chat_message", message);
       socket.emit("activity");
       chatMessageController.saveChatMessage(message);
     });
