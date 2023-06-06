@@ -61,13 +61,13 @@ const useSocketEvents = () => {
       setUsers(users);
     });
     socket.on("private message", handleNewPrivateMessage);
-    socket.on("chat message", handleNewMessage);
+    socket.on("chat_message", handleNewMessage);
     socket.on("chat messages", handleChatMessages);
     socket.on("connect_error", handleConnectError);
     socket.on("session", handleSession);
 
     return () => {
-      socket.off("chat message", handleNewMessage);
+      socket.off("chat_message", handleNewMessage);
       socket.off("private message", handleNewPrivateMessage);
       socket.off("users");
       socket.off("connect_error");

@@ -15,7 +15,7 @@ function MessageForm() {
 
   const handleMessageSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    socket.emit("chat message", message);
+    socket.emit("chat_message", message);
     setMessage("");
   };
 
