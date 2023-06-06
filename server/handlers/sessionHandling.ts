@@ -110,7 +110,7 @@ export function handleSession(io: Server) {
         clearTimeout(timeout);
         // connectedUsers--;
       }
-      socket.to(roomName).emit("user-joined-room", socket.userID);
+      socket.to(roomName).emit("user_joined_room", socket.userID);
     });
   });
 }

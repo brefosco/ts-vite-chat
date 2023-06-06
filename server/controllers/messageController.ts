@@ -1,5 +1,5 @@
 import { PrivateMessage } from "../types";
-import { MessageStore } from "../stores/messageStore";
+import { MessageStore } from "../stores/privateMessageStore";
 
 const messageStore = new MessageStore();
 

@@ -4,11 +4,10 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { handleSession } from "./handlers/sessionHandling";
 import { handleMessage } from "./handlers/messageHandling";
-
 import { handleConnection } from "./handlers/connectionHandling";
 
 const app = express();
-app.use(cors()); // Use CORS middleware
+app.use(cors()); 
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -19,10 +18,9 @@ const io = new Server(httpServer, {
   },
 });
 
-handleSession(io); // No need to pass the session store
-handleMessage(io); // No need to pass the message stores
-
-io.on("connection", handleConnection);
+handleSession(io);
+handleMessage(io);
+handleConnection(io);
 
 httpServer.listen(3000, () => {
   console.log("listening on *:3000");
