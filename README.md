@@ -2,7 +2,8 @@
 This is a real-time chat application built with [list the technologies you used, e.g., TypeScript, React, Express, Socket.io, Vite, etc.].
 
 ## Features
-* Real-time messaging: Send and receive messages in real-time.
+* Real-time group messaging: Send and receive messages in different rooms.
+* Persistence won't be implemented since this is just a prototype
 * User handling: Choose a unique username for identification.
 * Limited users: A maximum of 15 users can be present in a chat room at a time.
 * Private messaging is currently a WIP

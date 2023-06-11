@@ -1,8 +1,13 @@
 import { Server } from "socket.io";
 import { ExtendedSocket } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import { roomName } from "../constants";
 import * as sessionController from "../controllers/sessionController";
+import {
+  ACTIVITY,
+  SET_USERNAME,
+  USER_JOINED_ROOM,
+  roomName,
+} from "../../constants";
 
 function randomId() {
   return uuidv4();
@@ -48,7 +53,6 @@ export function handleSession(io: Server) {
       console.log("Max users limit reached. Disconnecting new user.");
       return;
     }
-    // connectedUsers++;
     let timeout = setTimeout(() => {
       console.log(
         `User ${socket.username} was disconnected due to inactivity.`
@@ -56,7 +60,7 @@ export function handleSession(io: Server) {
       socket.disconnect(true);
     }, inactivityTimeout);
 
-    socket.on("activity", () => {
+    socket.on(ACTIVITY, () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         console.log(
@@ -66,7 +70,7 @@ export function handleSession(io: Server) {
       }, inactivityTimeout);
     });
 
-    socket.on("set_username", (username: string, callback: Function) => {
+    socket.on(SET_USERNAME, (username: string, callback: Function) => {
       const isUsernameUnique = checkUsernameUnique(username);
 
       if (!isUsernameUnique) {
@@ -99,6 +103,7 @@ export function handleSession(io: Server) {
     });
 
     socket.on("disconnect", () => {
+      console.log(`Disconnecting ${socket.sessionID}`);
       if (socket.sessionID) {
         sessionController.saveSession(socket.sessionID, {
           userID: socket.userID!,
@@ -108,9 +113,8 @@ export function handleSession(io: Server) {
           connected: false,
         });
         clearTimeout(timeout);
-        // connectedUsers--;
       }
-      socket.to(roomName).emit("user_joined_room", socket.userID);
+      socket.to(roomName).emit(USER_JOINED_ROOM, socket.userID);
     });
   });
 }

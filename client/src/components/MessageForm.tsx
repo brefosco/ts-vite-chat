@@ -4,6 +4,7 @@ import { IoMdSend } from "react-icons/io";
 import { useAtom } from "jotai";
 import socket from "../socket";
 import { messageAtom } from "../atoms";
+import { CHAT_MESSAGE } from "../../../constants";
 
 function MessageForm() {
   const [message, setMessage] = useAtom(messageAtom);
@@ -15,7 +16,7 @@ function MessageForm() {
 
   const handleMessageSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    socket.emit("chat_message", message);
+    socket.emit(CHAT_MESSAGE, message);
     setMessage("");
   };
 

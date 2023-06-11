@@ -9,6 +9,7 @@ import {
 } from "../atoms";
 import socket from "../socket";
 import { ChatMessage, PrivateMessage, User } from "../types";
+import { CHAT_MESSAGE, CHAT_MESSAGES, PRIVATE_MESSAGE } from "../../../constants";
 
 interface SessionData {
   sessionID: string;
@@ -60,15 +61,15 @@ const useSocketEvents = () => {
     socket.on("users", (users: User[]) => {
       setUsers(users);
     });
-    socket.on("private message", handleNewPrivateMessage);
-    socket.on("chat_message", handleNewMessage);
-    socket.on("chat messages", handleChatMessages);
+    socket.on(PRIVATE_MESSAGE, handleNewPrivateMessage);
+    socket.on(CHAT_MESSAGE, handleNewMessage);
+    socket.on(CHAT_MESSAGES, handleChatMessages);
     socket.on("connect_error", handleConnectError);
     socket.on("session", handleSession);
 
     return () => {
-      socket.off("chat_message", handleNewMessage);
-      socket.off("private message", handleNewPrivateMessage);
+      socket.off(CHAT_MESSAGE, handleNewMessage);
+      socket.off(PRIVATE_MESSAGE, handleNewPrivateMessage);
       socket.off("users");
       socket.off("connect_error");
       socket.off("session");
