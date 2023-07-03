@@ -113,8 +113,16 @@ export function handleSession(io: Server) {
           connected: false,
         });
         clearTimeout(timeout);
+    
+        // Get updated users list and emit
+        const users = sessionController
+          .getAllSessions()
+          .filter((session) => session.connected);
+        
+        io.emit("users", users);
       }
       socket.to(roomName).emit(USER_JOINED_ROOM, socket.userID);
     });
+    
   });
 }
