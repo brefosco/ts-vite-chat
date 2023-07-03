@@ -1,5 +1,11 @@
 import { useEffect, useRef } from "react";
-import { Box, chakra, Button, Input } from "@chakra-ui/react";
+import {
+  Box,
+  chakra,
+  Button,
+  Input,
+  useColorModeValue,
+} from "@chakra-ui/react";
 import { IoMdSend } from "react-icons/io";
 import { useAtom } from "jotai";
 import socket from "../socket";
@@ -9,6 +15,8 @@ import { CHAT_MESSAGE } from "../../../constants";
 function MessageForm() {
   const [message, setMessage] = useAtom(messageAtom);
   const inputRef = useRef<HTMLInputElement>(null);
+  const inputBgColor = useColorModeValue("white", "black");
+  const inputTextColor = useColorModeValue("black", "white");
 
   const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
@@ -36,8 +44,8 @@ function MessageForm() {
         <Input
           ref={inputRef}
           type="text"
-          backgroundColor="white"
-          color="black"
+          backgroundColor={inputBgColor}
+          color={inputTextColor}
           placeholder="Type your message"
           minLength={1}
           required
