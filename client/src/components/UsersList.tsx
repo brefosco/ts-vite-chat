@@ -1,7 +1,9 @@
-import { useAtomValue, useSetAtom } from "jotai";
-import { recipientAtom, usernameAtom, usersAtom } from "../atoms";
+import { useAtom, useSetAtom } from "jotai";
+import { usernameAtom, usersAtom } from "../atoms";
 import { Box, Button, chakra, Flex, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import socket from "../socket";
 
 function LogoutButton() {
   const navigate = useNavigate();
@@ -11,7 +13,7 @@ function LogoutButton() {
     localStorage.setItem("sessionID", "");
 
     // localStorage.removeItem("sessionID");
-    // The above solution should work, I don't know why it isn't :*(
+    // The above solution (removeItem) should work, I don't know why it isn't :*(
 
     setUsername("");
     navigate("/select-username");
@@ -21,16 +23,29 @@ function LogoutButton() {
 }
 
 function UsersList() {
-  const users = useAtomValue(usersAtom);
-  const setRecipient = useSetAtom(recipientAtom);
+  const [users, setUsers] = useAtom(usersAtom);
+  // const setRecipient = useSetAtom(recipientAtom);
+  // const navigate = useNavigate();
 
-  const selectUser = (username: string) => {
-    setRecipient(username);
-  };
+  // const selectUser = (username: string) => {
+  //   setRecipient(username);
+  //   navigate("/private");
+  // };
+
+  useEffect(() => {
+    socket.on("users", (updatedUsers) => {
+      setUsers(updatedUsers);
+    });
+
+    // Clean up the event listener when the component is unmounted
+    return () => {
+      socket.off("users");
+    };
+  }, []);
 
   return (
     <Box>
-      <Flex justifyContent="flex-end">
+      <Flex justifyContent="flex-end" marginTop={4}>
         <LogoutButton />
       </Flex>
       <Box>
@@ -41,7 +56,7 @@ function UsersList() {
               cursor="pointer"
               key={index}
               bgColor="gray.400"
-              onClick={() => selectUser(user.username)}
+              // onClick={() => selectUser(user.username)}
               borderRadius={4}
               p={2}
               m={1}
